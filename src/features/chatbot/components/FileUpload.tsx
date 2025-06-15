@@ -1,151 +1,129 @@
-import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
 import { FileAttachment } from '@/lib/chat-storage';
-import { v4 as uuidv4 } from 'uuid';
+import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-  onFilesUploaded: (files: FileAttachment[]) => void;
+  onFilesSelected?: (files: FileAttachment[]) => void;
+  onFilesUploaded?: (files: FileAttachment[]) => void;
+  disabled?: boolean;
   maxFiles?: number;
-  maxSize?: number; // in bytes
-  acceptedTypes?: string[];
-  className?: string;
+  maxFileSize?: number; // in MB
 }
 
-interface UploadingFile {
-  id: string;
-  file: File;
-  progress: number;
-  error?: string;
-}
+export function FileUpload({ onFilesSelected, onFilesUploaded, disabled = false, maxFiles = 3, maxFileSize = 10 }: FileUploadProps) {
+  const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-const defaultAcceptedTypes = [
-  'image/jpeg',
-  'image/png', 
-  'image/gif',
-  'image/webp',
-  'application/pdf',
-  'text/plain',
-  'text/csv',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-  'audio/mpeg',
-  'audio/wav',
-  'audio/mp4',
-  'video/mp4',
-  'video/avi',
-  'video/quicktime'
-];
+  const handleFileSelection = async (files: FileList) => {
+    const fileArray = Array.from(files);
+    const processedFiles: FileAttachment[] = [];
 
-export function FileUpload({
-  onFilesUploaded,
-  maxFiles = 10,
-  maxSize = 10 * 1024 * 1024, // 10MB
-  acceptedTypes = defaultAcceptedTypes,
-  className
-}: FileUploadProps) {
-  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<FileAttachment[]>([]);
+    for (const file of fileArray.slice(0, maxFiles)) {
+      if (file.size > maxFileSize * 1024 * 1024) {
+        alert(`File "${file.name}" quá lớn. Kích thước tối đa là ${maxFileSize}MB.`);
+        continue;
+      }
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    // Check file limits
-    const totalFiles = uploadedFiles.length + acceptedFiles.length;
-    if (totalFiles > maxFiles) {
-      alert(`Chỉ được upload tối đa ${maxFiles} files`);
-      return;
-    }
+      // Check file type
+      if (!isValidFileType(file.type)) {
+        alert(`File "${file.name}" không được hỗ trợ. Chỉ hỗ trợ ảnh (JPG, PNG, GIF, WebP) và tài liệu (PDF, DOC, DOCX, TXT).`);
+        continue;
+      }
 
-    // Create uploading file objects
-    const newUploadingFiles: UploadingFile[] = acceptedFiles.map(file => ({
-      id: uuidv4(),
-      file,
-      progress: 0
-    }));
-
-    setUploadingFiles(prev => [...prev, ...newUploadingFiles]);
-
-    // Process each file
-    for (const uploadingFile of newUploadingFiles) {
       try {
-        await processFile(uploadingFile);
+        const base64 = await fileToBase64(file);
+        processedFiles.push({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          type: mapFileType(file.type),
+          data: base64,
+          size: file.size
+        });
       } catch (error) {
         console.error('Error processing file:', error);
-        setUploadingFiles(prev => 
-          prev.map(f => 
-            f.id === uploadingFile.id 
-              ? { ...f, error: 'Lỗi khi xử lý file' }
-              : f
-          )
-        );
+        alert(`Không thể xử lý file "${file.name}".`);
       }
     }
-  }, [uploadedFiles.length, maxFiles]);
 
-  const processFile = async (uploadingFile: UploadingFile): Promise<void> => {
-    const { file } = uploadingFile;
+    if (processedFiles.length > 0) {
+      const newFiles = [...selectedFiles, ...processedFiles].slice(0, maxFiles);
+      setSelectedFiles(newFiles);
+      onFilesSelected?.(newFiles);
+      onFilesUploaded?.(newFiles);
+    }
+  };
 
-    // Simulate upload progress
-    const updateProgress = (progress: number) => {
-      setUploadingFiles(prev =>
-        prev.map(f =>
-          f.id === uploadingFile.id ? { ...f, progress } : f
-        )
-      );
-    };
+  const mapFileType = (mimeType: string): 'image' | 'pdf' | 'video' | 'audio' | 'document' => {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType === 'application/pdf') return 'pdf';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    return 'document';
+  };
 
-    // Convert file to data URL/blob URL for preview
+  const isValidFileType = (mimeType: string): boolean => {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png', 
+      'image/gif',
+      'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    return allowedTypes.includes(mimeType);
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      // Simulate upload with progress
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 30;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          
-          // Create file URL
-          const url = URL.createObjectURL(file);
-          
-          const fileAttachment: FileAttachment = {
-            id: uploadingFile.id,
-            name: file.name,
-            type: getFileType(file.type),
-            size: file.size,
-            url: url,
-            mimeType: file.type
-          };
-
-          // Add to uploaded files
-          setUploadedFiles(prev => {
-            const newFiles = [...prev, fileAttachment];
-            onFilesUploaded(newFiles);
-            return newFiles;
-          });
-
-          // Remove from uploading
-          setUploadingFiles(prev => 
-            prev.filter(f => f.id !== uploadingFile.id)
-          );
-
-          resolve();
-        } else {
-          updateProgress(progress);
-        }
-      }, 100);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data URL prefix to get just the base64
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
   };
 
-  const getFileType = (mimeType: string): string => {
-    if (mimeType.startsWith('image/')) return 'image';
-    if (mimeType.startsWith('video/')) return 'video';
-    if (mimeType.startsWith('audio/')) return 'audio';
-    if (mimeType === 'application/pdf') return 'pdf';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'document';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'spreadsheet';
-    return 'file';
+  const removeFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    onFilesSelected?.(newFiles);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (!disabled && e.dataTransfer.files) {
+      handleFileSelection(e.dataTransfer.files);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!disabled) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const getFileIcon = (mimeType: string): string => {
+    if (mimeType.startsWith('image/')) return '🖼️';
+    if (mimeType === 'application/pdf') return '📄';
+    if (mimeType.includes('word')) return '📝';
+    if (mimeType === 'text/plain') return '📃';
+    return '📎';
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -156,145 +134,74 @@ export function FileUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const removeFile = (fileId: string) => {
-    setUploadedFiles(prev => {
-      const file = prev.find(f => f.id === fileId);
-      if (file) {
-        URL.revokeObjectURL(file.url); // Clean up blob URL
-      }
-      const newFiles = prev.filter(f => f.id !== fileId);
-      onFilesUploaded(newFiles);
-      return newFiles;
-    });
-  };
-
-  const getFileIcon = (type: string): string => {
-    switch (type) {
-      case 'image': return '🖼️';
-      case 'video': return '🎥';
-      case 'audio': return '🎵';
-      case 'pdf': return '📄';
-      case 'document': return '📝';
-      case 'spreadsheet': return '📊';
-      default: return '📎';
-    }
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: acceptedTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
-    maxSize,
-    maxFiles
-  });
-
   return (
-    <div className={cn('space-y-4', className)}>
-      {/* Dropzone */}
+    <div className="space-y-2">
+      {/* File upload area */}
       <div
-        {...getRootProps()}
         className={cn(
-          'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors',
-          isDragActive
-            ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
-            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+          'border-2 border-dashed rounded-lg p-4 text-center transition-colors',
+          isDragging && !disabled
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
+            : 'border-gray-300 dark:border-gray-600',
+          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'
         )}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => !disabled && fileInputRef.current?.click()}
       >
-        <input {...getInputProps()} />
-        <div className="space-y-2">
-          <div className="text-2xl">
-            {isDragActive ? '📤' : '📎'}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*,.pdf,.doc,.docx,.txt"
+          onChange={(e) => e.target.files && handleFileSelection(e.target.files)}
+          className="hidden"
+          disabled={disabled}
+        />
+        
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-2xl">📎</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-medium">Nhấp để chọn file</span> hoặc kéo thả vào đây
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {isDragActive
-                ? 'Thả files vào đây...'
-                : 'Kéo thả files hoặc click để chọn'
-              }
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Hỗ trợ: Ảnh, PDF, Word, Excel, Audio, Video (tối đa {formatFileSize(maxSize)})
-            </p>
+          <div className="text-xs text-gray-500">
+            Hỗ trợ: JPG, PNG, PDF, DOC, TXT (tối đa {maxFileSize}MB)
           </div>
         </div>
       </div>
 
-      {/* Uploading Files */}
-      {uploadingFiles.length > 0 && (
+      {/* Selected files */}
+      {selectedFiles.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            Đang upload...
-          </h4>
-          {uploadingFiles.map((uploadingFile) => (
-            <div key={uploadingFile.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">
-                  {getFileIcon(getFileType(uploadingFile.file.type))}
-                </span>
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Files đã chọn ({selectedFiles.length}/{maxFiles}):
+          </div>
+          <div className="space-y-1">
+            {selectedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                <span className="text-lg">{getFileIcon(file.type)}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {uploadingFile.file.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Progress value={uploadingFile.progress} className="flex-1 h-2" />
-                    <span className="text-xs text-gray-500">
-                      {Math.round(uploadingFile.progress)}%
-                    </span>
-                  </div>
-                  {uploadingFile.error && (
-                    <p className="text-xs text-red-500 mt-1">{uploadingFile.error}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Uploaded Files */}
-      {uploadedFiles.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            Files đã upload ({uploadedFiles.length})
-          </h4>
-          <div className="space-y-2">
-            {uploadedFiles.map((file) => (
-              <div key={file.id} className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                <span className="text-lg">
-                  {getFileIcon(file.type)}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {file.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-xs">
-                      {file.type}
-                    </Badge>
-                    <span className="text-xs text-gray-500">
-                      {formatFileSize(file.size)}
-                    </span>
-                  </div>
+                  <div className="text-sm font-medium truncate">{file.name}</div>
+                  <div className="text-xs text-gray-500">{formatFileSize(file.size)}</div>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeFile(file.id)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  onClick={() => removeFile(index)}
+                  className="h-auto p-1 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  disabled={disabled}
                 >
-                  🗑️
+                  ✕
                 </Button>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* File Limits Info */}
-      <div className="text-xs text-gray-500 dark:text-gray-400">
-        <p>• Tối đa {maxFiles} files, mỗi file tối đa {formatFileSize(maxSize)}</p>
-        <p>• Hỗ trợ: JPG, PNG, GIF, PDF, DOCX, XLSX, MP3, MP4, TXT</p>
-        <p>• Files sẽ được phân tích bởi Gemini AI để trả lời câu hỏi</p>
-      </div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ import { SourceCard } from './SourceCard';
 
 // Services and types
 import { chatStorage, ChatSession, StoredChatMessage, FileAttachment } from '@/lib/chat-storage';
-import { enhancedGemini, MultimodalMessage } from '@/lib/enhanced-gemini';
+import { enhancedGemini, FileData } from '@/lib/enhanced-gemini';
 
 interface EnhancedChatMessage extends StoredChatMessage {
   isStreaming?: boolean;
@@ -215,14 +215,15 @@ export function EnhancedChatInterface() {
     chatStorage.addMessage(currentSession.id, userMessage);
 
     try {
-      // Prepare message for Gemini
-      const multimodalMessage: MultimodalMessage = {
-        text: messageText,
-        files: userMessage.attachments
-      };
+      // Convert attachments to FileData format
+      const geminiFiles: FileData[] = userMessage.attachments?.map(file => ({
+        mimeType: file.type === 'image' ? 'image/jpeg' : 
+                  file.type === 'pdf' ? 'application/pdf' : 'text/plain',
+        data: file.data
+      })) || [];
 
       // Use streaming for better UX
-      const stream = await enhancedGemini.sendMessageStream(multimodalMessage);
+      const stream = await enhancedGemini.sendMessageStream(messageText, geminiFiles);
       let fullResponse = '';
 
       for await (const chunk of stream) {

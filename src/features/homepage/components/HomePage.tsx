@@ -28,7 +28,7 @@ export function HomePage() {
               <h1 className="text-xl font-bold bg-gradient-to-r from-red-600 to-yellow-600 bg-clip-text text-transparent">
                 G-Traffic Heroes
               </h1>
-            
+              <p className="text-sm text-muted-foreground">Anh hùng Giao thông</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -71,22 +71,13 @@ export function HomePage() {
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-12">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-red-500 to-yellow-500 hover:from-red-600 hover:to-yellow-600 text-white font-semibold px-8 py-3 text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-                  onClick={() => navigate('/chatbot')}
-                >
-                  🤖 Chat cơ bản
-                </Button>
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-3 text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-                  onClick={() => navigate('/enhanced-chat')}
-                >
-                  🚀 G-LawBot Pro
-                </Button>
-              </div>
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/traffic-agent')}
+                className="bg-gradient-to-r from-red-500 to-yellow-500 hover:from-red-600 hover:to-yellow-600 text-white px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+              >
+                🕵️ Làm Điệp viên Giao thông
+              </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
@@ -130,9 +121,12 @@ export function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
             {/* Feature 1 */}
-            <Card className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-red-200 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/20 dark:to-red-900/20">
+            <Card 
+              className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-red-200 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/20 dark:to-red-900/20 cursor-pointer"
+              onClick={() => navigate('/traffic-agent')}
+            >
               <CardHeader className="text-center">
                 <div className="mx-auto size-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <span className="text-3xl">🕵️</span>
@@ -145,7 +139,7 @@ export function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-sm mb-4">
                   <li className="flex items-center gap-2">
                     <span className="text-green-500">✓</span> GPS định vị chính xác
                   </li>
@@ -156,11 +150,23 @@ export function HomePage() {
                     <span className="text-green-500">✓</span> Thưởng điểm và huy hiệu
                   </li>
                 </ul>
+                <Button 
+                  className="w-full bg-red-500 hover:bg-red-600 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/traffic-agent');
+                  }}
+                >
+                  🚀 Bắt đầu báo cáo
+                </Button>
               </CardContent>
             </Card>
 
             {/* Feature 2 */}
-            <Card className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100/50 dark:from-yellow-950/20 dark:to-yellow-900/20">
+            <Card 
+              className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100/50 dark:from-yellow-950/20 dark:to-yellow-900/20 cursor-pointer"
+              onClick={() => navigate('/chatbot')}
+            >
               <CardHeader className="text-center">
                 <div className="mx-auto size-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <span className="text-3xl">🤖</span>
@@ -173,7 +179,7 @@ export function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-sm mb-4">
                   <li className="flex items-center gap-2">
                     <span className="text-green-500">✓</span> Gemini AI 2.0-flash
                   </li>
@@ -184,34 +190,55 @@ export function HomePage() {
                     <span className="text-green-500">✓</span> Gợi ý chủ động theo vị trí
                   </li>
                 </ul>
+                <Button 
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();  
+                    navigate('/chatbot');
+                  }}
+                >
+                  💬 Trò chuyện ngay
+                </Button>
               </CardContent>
             </Card>
 
-            {/* Feature 3 */}
-            <Card className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20">
+            {/* Feature 3 - Quiz Generator */}
+            <Card 
+              className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/20 cursor-pointer"
+              onClick={() => navigate('/quiz-generator')}
+            >
               <CardHeader className="text-center">
                 <div className="mx-auto size-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🎯</span>
+                  <span className="text-3xl">📚</span>
                 </div>
                 <CardTitle className="text-xl font-bold text-blue-700 dark:text-blue-300">
-                  Học thích ứng
+                  Quiz Pháp Luật
                 </CardTitle>
                 <CardDescription className="text-blue-600 dark:text-blue-400">
-                  Quiz & VR tương tác theo trình độ
+                  Tạo bài kiểm tra thông minh từ AI
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-sm mb-4">
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span> Tạo quiz từ PDF/DOCX
+                  </li>
                   <li className="flex items-center gap-2">
                     <span className="text-green-500">✓</span> Adaptive learning AI
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span> Mô phỏng tình huống thực
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span> Theo dõi tiến độ chi tiết
+                    <span className="text-green-500">✓</span> Phân tích kết quả chi tiết
                   </li>
                 </ul>
+                <Button 
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/quiz-generator');
+                  }}
+                >
+                  📝 Tạo Quiz ngay
+                </Button>
               </CardContent>
             </Card>
 
@@ -240,6 +267,46 @@ export function HomePage() {
                     <span className="text-green-500">✓</span> Xếp hạng trường/lớp
                   </li>
                 </ul>
+              </CardContent>
+            </Card>
+
+            {/* Feature 5 - Traffic Explainer */}
+            <Card 
+              className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 hover:border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/20 cursor-pointer"
+              onClick={() => navigate('/traffic-explainer')}
+            >
+              <CardHeader className="text-center">
+                <div className="mx-auto size-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🎓</span>
+                </div>
+                <CardTitle className="text-xl font-bold text-purple-700 dark:text-purple-300">
+                  Trợ Lý Giải Thích
+                </CardTitle>
+                <CardDescription className="text-purple-600 dark:text-purple-400">
+                  AI giải thích ATGT sinh động
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm mb-4">
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span> Giải thích trực quan
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span> Ví dụ thực tế dễ hiểu
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span> Bài học tương tác
+                  </li>
+                </ul>
+                <Button 
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/traffic-explainer');
+                  }}
+                >
+                  🎯 Học ngay
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -305,11 +372,20 @@ export function HomePage() {
             Tham gia cùng hàng nghìn bạn trẻ Việt Nam đang góp phần xây dựng giao thông an toàn và văn minh
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold shadow-xl">
-              🎮 Bắt đầu chơi ngay
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/traffic-agent')}
+              className="bg-white text-red-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold shadow-xl"
+            >
+              🕵️ Làm Điệp viên ngay
             </Button>
-            <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-red-600 px-8 py-4 text-lg font-semibold">
-              📚 Tìm hiểu thêm
+            <Button 
+              size="lg" 
+              variant="outline" 
+              onClick={() => navigate('/chatbot')}
+              className="border-2 border-white text-white hover:bg-white hover:text-red-600 px-8 py-4 text-lg font-semibold"
+            >
+              🤖 Thử AI Chat
             </Button>
           </div>
         </div>
