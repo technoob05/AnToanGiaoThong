@@ -28,7 +28,7 @@ export function HomePage() {
               <h1 className="text-xl font-bold bg-gradient-to-r from-red-600 to-yellow-600 bg-clip-text text-transparent">
                 G-Traffic Heroes
               </h1>
-              <p className="text-sm text-muted-foreground">Anh hùng Giao thông</p>
+              
             </div>
           </div>
           <div className="flex items-center space-x-4">

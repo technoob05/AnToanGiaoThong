@@ -7,7 +7,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 're
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Location, TrafficReport, ReportType, ReportStatus } from '../types';
-import { useGeolocation } from '../hooks/useGeolocation';
+import { useGeolocation } from '@/features/traffic-explainer/hooks/useGeolocation';
 import { useTrafficAgent } from '../hooks/useTrafficAgent';
 import { reverseGeocode } from '../utils/geocoding';
 import { Button } from '@/components/ui/button';
@@ -228,17 +228,17 @@ const ReportPopup = ({
               {report.status === ReportStatus.RESOLVED && 'Đã giải quyết'}
             </span>
           </Badge>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-600">
             {new Date(report.timestamp).toLocaleDateString('vi-VN')}
           </span>
         </div>
 
         <div>
           <h3 className="font-semibold text-sm mb-1">{getTypeLabel(report.type)}</h3>
-          <p className="text-sm text-gray-600">{report.description}</p>
+          <p className="text-sm text-gray-700">{report.description}</p>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-gray-600">
           <span>📍 {report.location.address || 'Chưa có địa chỉ'}</span>
           <span>✅ {report.verificationCount} xác nhận</span>
         </div>
@@ -280,7 +280,7 @@ const ReportPopup = ({
         )}
 
         {userHasVoted && (
-          <div className="text-xs text-center text-gray-500 py-2">
+          <div className="text-xs text-center text-gray-600 py-2">
             Bạn đã bình chọn cho báo cáo này
           </div>
         )}
@@ -303,7 +303,7 @@ export const TrafficMap = ({
   className = ''
 }: TrafficMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
-  const { location: userLocation, requestLocation, loading: locationLoading } = useGeolocation();
+  const geolocation = useGeolocation();
   const { reports, voteOnReport, currentUser } = useTrafficAgent();
   const [mapReady, setMapReady] = useState(false);
 
@@ -315,17 +315,21 @@ export const TrafficMap = ({
     voteOnReport(reportId, voteType === 'confirm' ? 'confirm' : 'reject');
   }, [voteOnReport]);
 
-  const handleCenterOnUser = useCallback(() => {
-    if (!userLocation) {
-      requestLocation();
+  const handleCenterOnUser = useCallback(async () => {
+    if (!geolocation.location) {
+      await geolocation.getCurrentLocation();
     }
-  }, [userLocation, requestLocation]);
+    
+    if (geolocation.location && mapRef.current) {
+      mapRef.current.setView([geolocation.location.latitude, geolocation.location.longitude], 15);
+    }
+  }, [geolocation]);
 
   return (
     <div className={`relative ${className}`}>
       <MapContainer
-        center={userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter}
-        zoom={userLocation ? 15 : defaultZoom}
+        center={geolocation.location ? [geolocation.location.latitude, geolocation.location.longitude] : defaultCenter}
+        zoom={geolocation.location ? 15 : defaultZoom}
         style={{ height: '100%', width: '100%' }}
         ref={mapRef}
         whenReady={() => setMapReady(true)}
@@ -337,7 +341,11 @@ export const TrafficMap = ({
         />
 
         {/* User location marker */}
-        <UserLocationHandler location={userLocation} />
+        <UserLocationHandler location={geolocation.location ? {
+          lat: geolocation.location.latitude,
+          lng: geolocation.location.longitude,
+          address: geolocation.location.address
+        } : null} />
 
         {/* Traffic reports markers */}
         {reports.map((report) => (
@@ -415,10 +423,15 @@ export const TrafficMap = ({
           variant="outline"
           size="sm"
           onClick={handleCenterOnUser}
-          disabled={locationLoading}
+          disabled={geolocation.isLoading}
           className="bg-white shadow-md"
+          title="Về vị trí hiện tại"
         >
-          <Navigation className="w-4 h-4" />
+          {geolocation.isLoading ? (
+            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Navigation className="w-4 h-4" />
+          )}
         </Button>
       </div>
 

@@ -25,7 +25,7 @@ import {
 import { TrafficMap } from './TrafficMap';
 import { ReportForm } from './ReportForm';
 import { useTrafficAgent } from '../hooks/useTrafficAgent';
-import { useGeolocation } from '../hooks/useGeolocation';
+import { useGeolocation } from '@/features/traffic-explainer/hooks/useGeolocation';
 import { Location, TrafficReport, ReportFormData, BadgeRarity } from '../types';
 
 interface TrafficAgentInterfaceProps {
@@ -47,7 +47,7 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
     error 
   } = useTrafficAgent();
   
-  const { location: userLocation, requestLocation } = useGeolocation();
+  const geolocation = useGeolocation();
 
   // Handle location selection for new reports
   const handleLocationSelect = useCallback((location: Location) => {
@@ -78,13 +78,37 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
   }, []);
 
   // Handle new report button
-  const handleNewReport = useCallback(() => {
-    if (!userLocation) {
-      requestLocation();
+  const handleNewReport = useCallback(async () => {
+    try {
+      let currentLocation = geolocation.location;
+      
+      if (!currentLocation) {
+        currentLocation = await geolocation.getCurrentLocation();
+      }
+      
+      if (currentLocation) {
+        setSelectedLocation({
+          lat: currentLocation.latitude,
+          lng: currentLocation.longitude,
+          address: currentLocation.address,
+          timestamp: Date.now()
+        });
+        setActiveTab('report');
+        setShowReportForm(true);
+      } else {
+        // Nếu không lấy được vị trí, vẫn cho phép tạo báo cáo với manual input
+        setSelectedLocation(null);
+        setActiveTab('report');
+        setShowReportForm(true);
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      // Fallback: cho phép tạo báo cáo với manual input
+      setSelectedLocation(null);
+      setActiveTab('report');
+      setShowReportForm(true);
     }
-    setActiveTab('report');
-    setShowReportForm(true);
-  }, [userLocation, requestLocation]);
+  }, [geolocation]);
 
   // Get badge rarity color
   const getBadgeRarityColor = (rarity: BadgeRarity) => {
@@ -109,23 +133,46 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
   return (
     <div className={`h-screen flex flex-col ${className}`}>
       {/* Header */}
-      <div className="bg-white border-b shadow-sm p-4">
+      <div className="bg-white border-b shadow-sm p-3 md:p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-500 p-2 rounded-lg">
-              <Map className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="bg-blue-500 p-1.5 md:p-2 rounded-lg">
+              <Map className="w-5 h-5 md:w-6 md:h-6 text-blue-50" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Điệp viên Giao thông</h1>
-              <p className="text-sm text-gray-600">Chào {currentUser.username}!</p>
+              <h1 className="text-lg md:text-xl font-bold text-gray-900">Điệp viên Giao thông</h1>
+              <p className="text-xs md:text-sm text-gray-600">Chào {currentUser.username}!</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Location Info - Hidden on mobile, shown on tablet+ */}
+            {geolocation.location ? (
+              <div className="hidden sm:flex items-center gap-2 bg-green-50 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+                <MapPin className="w-3 h-3 md:w-4 md:h-4 text-green-600" />
+                <div className="text-xs md:text-sm">
+                  <div className="font-semibold text-green-800">Vị trí hiện tại</div>
+                  <div className="text-green-700 max-w-24 md:max-w-32 truncate">
+                    {geolocation.location.address || 'Đã xác định'}
+                  </div>
+                </div>
+              </div>
+            ) : geolocation.isLoading ? (
+              <div className="hidden sm:flex items-center gap-2 bg-blue-50 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+                <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="text-xs md:text-sm text-blue-700">Đang lấy vị trí...</div>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2 bg-yellow-50 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+                <MapPin className="w-3 h-3 md:w-4 md:h-4 text-yellow-600" />
+                <div className="text-xs md:text-sm text-yellow-700">Chưa có vị trí</div>
+              </div>
+            )}
+
             {/* User Stats */}
-            <div className="flex items-center gap-3 bg-blue-50 px-3 py-2 rounded-lg">
-              <Trophy className="w-5 h-5 text-blue-500" />
-              <div className="text-sm">
+            <div className="flex items-center gap-2 md:gap-3 bg-blue-50 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+              <Trophy className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+              <div className="text-xs md:text-sm">
                 <div className="font-semibold text-blue-900">{currentUser.points} điểm</div>
                 <div className="text-blue-600">Level {currentUser.level}</div>
               </div>
@@ -134,19 +181,20 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
             {/* New Report Button */}
             <Button 
               onClick={handleNewReport}
-              className="bg-green-500 hover:bg-green-600"
+              className="bg-green-500 hover:bg-green-600 px-3 md:px-4 py-2"
+              size="sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Báo cáo mới
+              <Plus className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Báo cáo mới</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col md:flex-row">
         {/* Sidebar - Stats & Leaderboard */}
-        <div className="w-80 bg-gray-50 border-r overflow-y-auto">
+        <div className="w-full md:w-80 bg-gray-50 border-b md:border-r md:border-b-0 overflow-y-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <TabsList className="grid w-full grid-cols-3 p-1 m-2">
               <TabsTrigger value="map" className="text-xs">
@@ -183,12 +231,12 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
                         >
                           {report.isVerified ? 'Đã xác minh' : 'Chờ xác minh'}
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-600">
                           {new Date(report.timestamp).toLocaleDateString('vi-VN')}
                         </span>
                       </div>
                       <p className="text-sm font-medium mb-1">{report.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
                         <MapPin className="w-3 h-3" />
                         <span className="truncate">
                           {report.location.address || 'Không có địa chỉ'}
@@ -198,7 +246,7 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
                   ))}
                   
                   {reports.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-600">
                       <Target className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">Chưa có báo cáo nào</p>
                       <p className="text-xs">Hãy tạo báo cáo đầu tiên!</p>
@@ -273,7 +321,7 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
                   </div>
                   
                   {badges.length === 0 && (
-                    <div className="text-center py-4 text-gray-500">
+                    <div className="text-center py-4 text-gray-600">
                       <Medal className="w-6 h-6 mx-auto mb-2 opacity-50" />
                       <p className="text-xs">Chưa có huy hiệu nào</p>
                     </div>
@@ -312,9 +360,9 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
                       </div>
                       <div className="flex-1">
                         <div className="text-sm font-medium">{entry.user.username}</div>
-                        <div className="text-xs text-gray-500">{entry.points} điểm</div>
+                        <div className="text-xs text-gray-600">{entry.points} điểm</div>
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-600">
                         {entry.verifiedReportsCount} xác minh
                       </div>
                     </div>
@@ -325,7 +373,7 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
 
             {/* Report Tab */}
             <TabsContent value="report" className="p-4">
-              {showReportForm && selectedLocation ? (
+              {showReportForm ? (
                 <ReportForm
                   location={selectedLocation}
                   onSubmit={handleReportSubmit}
@@ -340,14 +388,55 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
                   <CardContent className="text-center py-8">
                     <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                     <p className="text-sm text-gray-600 mb-4">
-                      Click vào bản đồ để chọn vị trí báo cáo
+                      Chọn cách xác định vị trí cho báo cáo của bạn
                     </p>
-                    <Button 
-                      onClick={() => setActiveTab('map')}
-                      variant="outline"
-                    >
-                      Chuyển đến bản đồ
-                    </Button>
+                    <div className="space-y-2">
+                      <Button 
+                        onClick={handleNewReport}
+                        className="w-full"
+                        disabled={geolocation.isLoading}
+                      >
+                        {geolocation.isLoading ? (
+                          <>
+                            <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Đang lấy vị trí...
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="w-4 h-4 mr-2" />
+                            Sử dụng vị trí hiện tại
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        onClick={() => setActiveTab('map')}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Chọn vị trí trên bản đồ
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setShowReportForm(true);
+                          setSelectedLocation(null); // Không có location, sẽ dùng manual input
+                        }}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Nhập địa chỉ thủ công
+                      </Button>
+                    </div>
+                    
+                    {geolocation.error && (
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-xs text-yellow-800">
+                          <strong>Không thể lấy vị trí:</strong> {geolocation.error}
+                        </p>
+                        <p className="text-xs text-yellow-700 mt-1">
+                          Bạn có thể nhập địa chỉ thủ công hoặc chọn trên bản đồ
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -356,7 +445,7 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
         </div>
 
         {/* Main Map Area */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-h-[400px] md:min-h-0">
           <TrafficMap
             onLocationSelect={handleLocationSelect}
             selectedLocation={selectedLocation}

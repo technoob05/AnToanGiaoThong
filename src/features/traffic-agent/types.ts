@@ -6,6 +6,7 @@ export interface Location {
   lat: number;
   lng: number;
   address?: string;
+  timestamp?: number; // Thêm timestamp để theo dõi thời gian lấy vị trí
 }
 
 export interface TrafficReport {
@@ -139,4 +140,5 @@ export interface ImageAnalysisResult {
   detectedIssues: string[];
   confidence: number;
   description: string;
+  isValidFormat?: boolean; // Thêm flag để check format
 } 
