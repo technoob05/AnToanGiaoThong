@@ -1,7 +1,8 @@
 # 🚦 G-Traffic Heroes
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/685cf435-d576-4c65-9fd0-8d1d935e8f2d" alt="G-Traffic Heroes" width="600" />
+![image](https://github.com/user-attachments/assets/41d58e5d-3b51-43df-ab10-0ac009bb9b02)
+
 </p>
 
 <p align="center">
