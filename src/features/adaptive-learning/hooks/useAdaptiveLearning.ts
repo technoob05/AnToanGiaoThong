@@ -7,7 +7,7 @@ import {
   AdaptiveFeedback,
   Achievement 
 } from '../types';
-import { QUIZ_QUESTIONS, LEARNING_PATHS, ACHIEVEMENTS, generateAdaptiveFeedback } from '../data/quiz-data';
+import { QUIZ_QUESTIONS, ACHIEVEMENTS, generateAdaptiveFeedback } from '../data/quiz-data';
 
 interface UseAdaptiveLearningReturn {
   // State
@@ -311,7 +311,7 @@ export function useAdaptiveLearning(): UseAdaptiveLearningReturn {
     return recommended.sort(() => Math.random() - 0.5).slice(0, 5);
   }, [userProgress]);
 
-  const updateProgress = useCallback((answers: QuizAnswer[]) => {
+  const updateProgress = useCallback((_answers: QuizAnswer[]) => {
     // This would be used for manual progress updates
     // Implementation depends on specific requirements
   }, []);

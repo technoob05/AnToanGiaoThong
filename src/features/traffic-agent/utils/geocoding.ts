@@ -76,9 +76,9 @@ export const getAddressComponents = (result: GeocodingResult) => {
 
   return {
     street: [address.house_number, address.road].filter(Boolean).join(' '),
-    district: address.suburb || address.city_district || '',
-    city: address.city || address.town || address.village || '',
-    state: address.state || address.province || '',
+    district: address.suburb || (address as any).city_district || '',
+    city: address.city || (address as any).town || (address as any).village || '',
+    state: address.state || (address as any).province || '',
     country: address.country || '',
     formatted: result.display_name
   };
@@ -159,8 +159,8 @@ export const formatLocationDisplay = (location: Location): string => {
  * Calculate zoom level based on search result type
  */
 export const getAppropriateZoomLevel = (result: GeocodingResult): number => {
-  const type = result.type || '';
-  const category = result.category || '';
+  const type = (result as any).type || '';
+  const category = (result as any).category || '';
 
   // Building or POI level
   if (['house', 'building', 'amenity'].includes(category)) {
@@ -184,4 +184,4 @@ export const getAppropriateZoomLevel = (result: GeocodingResult): number => {
 
   // Default zoom
   return 14;
-}; 
+};

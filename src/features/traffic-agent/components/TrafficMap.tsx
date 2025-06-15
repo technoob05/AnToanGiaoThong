@@ -2,11 +2,11 @@
  * Main Traffic Map Component using Leaflet and OSM
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Location, TrafficReport, ReportType, ReportStatus } from '../types';
+import { Location, TrafficReport, ReportType, ReportStatus, VoteType } from '../types';
 import { useGeolocation } from '@/features/traffic-explainer/hooks/useGeolocation';
 import { useTrafficAgent } from '../hooks/useTrafficAgent';
 import { reverseGeocode } from '../utils/geocoding';
@@ -14,10 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MapPin, 
   Navigation, 
-  Plus, 
-  AlertTriangle, 
   CheckCircle, 
   XCircle, 
   Clock 
@@ -305,14 +302,13 @@ export const TrafficMap = ({
   const mapRef = useRef<L.Map | null>(null);
   const geolocation = useGeolocation();
   const { reports, voteOnReport, currentUser } = useTrafficAgent();
-  const [mapReady, setMapReady] = useState(false);
 
   // Default center (Vietnam)
   const defaultCenter: [number, number] = [21.0285, 105.8542]; // Hanoi
   const defaultZoom = 10;
 
   const handleVote = useCallback((reportId: string, voteType: 'confirm' | 'reject') => {
-    voteOnReport(reportId, voteType === 'confirm' ? 'confirm' : 'reject');
+    voteOnReport(reportId, voteType === 'confirm' ? VoteType.CONFIRM : VoteType.REJECT);
   }, [voteOnReport]);
 
   const handleCenterOnUser = useCallback(async () => {
@@ -332,7 +328,6 @@ export const TrafficMap = ({
         zoom={geolocation.location ? 15 : defaultZoom}
         style={{ height: '100%', width: '100%' }}
         ref={mapRef}
-        whenReady={() => setMapReady(true)}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -463,4 +458,4 @@ export const TrafficMap = ({
       </Card>
     </div>
   );
-}; 
+};

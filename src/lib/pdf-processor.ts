@@ -24,7 +24,7 @@ export class PDFProcessor {
     return PDFProcessor.instance;
   }
 
-  async processPDF(filePath: string): Promise<DocumentChunk[]> {
+  async processPDF(_filePath: string): Promise<DocumentChunk[]> {
     if (this.isProcessed) {
       return this.documents;
     }
@@ -39,94 +39,66 @@ export class PDFProcessor {
     return this.documents;
   }
 
-  private createChunks(text: string): DocumentChunk[] {
-    const chunks: DocumentChunk[] = [];
-    
-    // Clean text
-    const cleanText = text
-      .replace(/\s+/g, ' ')
-      .replace(/\n+/g, '\n')
-      .trim();
-    
-    // Split by common Vietnamese legal document patterns
-    const sections = this.splitByLegalSections(cleanText);
-    
-    sections.forEach((section, index) => {
-      if (section.trim().length > 50) { // Only include substantial chunks
-        chunks.push({
-          id: `chunk_${index}`,
-          content: section.trim(),
-          metadata: {
-            page: Math.floor(index / 5) + 1, // Estimate page
-            section: this.extractSectionInfo(section),
-            article: this.extractArticleInfo(section),
-            source: 'Luật Giao thông đường bộ Việt Nam'
-          }
-        });
-      }
-    });
-    
-    return chunks;
-  }
+  // These methods are kept for future PDF processing functionality
+  // Currently unused in the mock implementation
+  // private splitByLegalSections(text: string): string[] {
+  //   // Split by common Vietnamese legal patterns
+  //   const patterns = [
+  //     /(?=Điều\s+\d+)/g,           // Articles
+  //     /(?=Khoản\s+\d+)/g,         // Clauses  
+  //     /(?=Chương\s+[IVX]+)/g,     // Chapters
+  //     /(?=Mục\s+\d+)/g,           // Sections
+  //     /(?=\d+\.\s)/g,             // Numbered items
+  //   ];
+  //   
+  //   let sections = [text];
+  //   
+  //   patterns.forEach(pattern => {
+  //     const newSections: string[] = [];
+  //     sections.forEach(section => {
+  //       const parts = section.split(pattern);
+  //       newSections.push(...parts);
+  //     });
+  //     sections = newSections;
+  //   });
+  //   
+  //   // Also split by length if chunks are too long
+  //   const maxChunkLength = 1000;
+  //   const finalSections: string[] = [];
+  //   
+  //   sections.forEach(section => {
+  //     if (section.length <= maxChunkLength) {
+  //       finalSections.push(section);
+  //     } else {
+  //       // Split long sections by sentences
+  //       const sentences = section.split(/[.!?]\s+/);
+  //       let currentChunk = '';
+  //       
+  //       sentences.forEach(sentence => {
+  //         if ((currentChunk + sentence).length <= maxChunkLength) {
+  //           currentChunk += sentence + '. ';
+  //         } else {
+  //           if (currentChunk) finalSections.push(currentChunk.trim());
+  //           currentChunk = sentence + '. ';
+  //         }
+  //       });
+  //       
+  //       if (currentChunk) finalSections.push(currentChunk.trim());
+  //     }
+  //   });
+  //   
+  //   return finalSections;
+  // }
 
-  private splitByLegalSections(text: string): string[] {
-    // Split by common Vietnamese legal patterns
-    const patterns = [
-      /(?=Điều\s+\d+)/g,           // Articles
-      /(?=Khoản\s+\d+)/g,         // Clauses  
-      /(?=Chương\s+[IVX]+)/g,     // Chapters
-      /(?=Mục\s+\d+)/g,           // Sections
-      /(?=\d+\.\s)/g,             // Numbered items
-    ];
-    
-    let sections = [text];
-    
-    patterns.forEach(pattern => {
-      const newSections: string[] = [];
-      sections.forEach(section => {
-        const parts = section.split(pattern);
-        newSections.push(...parts);
-      });
-      sections = newSections;
-    });
-    
-    // Also split by length if chunks are too long
-    const maxChunkLength = 1000;
-    const finalSections: string[] = [];
-    
-    sections.forEach(section => {
-      if (section.length <= maxChunkLength) {
-        finalSections.push(section);
-      } else {
-        // Split long sections by sentences
-        const sentences = section.split(/[.!?]\s+/);
-        let currentChunk = '';
-        
-        sentences.forEach(sentence => {
-          if ((currentChunk + sentence).length <= maxChunkLength) {
-            currentChunk += sentence + '. ';
-          } else {
-            if (currentChunk) finalSections.push(currentChunk.trim());
-            currentChunk = sentence + '. ';
-          }
-        });
-        
-        if (currentChunk) finalSections.push(currentChunk.trim());
-      }
-    });
-    
-    return finalSections;
-  }
+  // private extractSectionInfo(text: string): string | undefined {
+  //   const sectionMatch = text.match(/(?:Chương|Mục)\s+([IVX\d]+)/i);
+  //   return sectionMatch ? sectionMatch[0] : undefined;
+  // }
 
-  private extractSectionInfo(text: string): string | undefined {
-    const sectionMatch = text.match(/(?:Chương|Mục)\s+([IVX\d]+)/i);
-    return sectionMatch ? sectionMatch[0] : undefined;
-  }
-
-  private extractArticleInfo(text: string): string | undefined {
-    const articleMatch = text.match(/Điều\s+(\d+)/i);
-    return articleMatch ? articleMatch[0] : undefined;
-  }
+  // private extractArticleInfo(text: string): string | undefined {
+  //   const articleMatch = text.match(/Điều\s+(\d+)/i);
+  //   return articleMatch ? articleMatch[0] : undefined;
+  // }
 
   private createMockDocuments(): DocumentChunk[] {
     // Comprehensive mock data based on Vietnamese traffic law

@@ -22,10 +22,8 @@ export interface SpeechSynthesisSettings {
 
 export class SpeechSynthesisService {
   private synth: SpeechSynthesis;
-  private currentUtterance: SpeechSynthesisUtterance | null = null;
   private isSpeaking: boolean = false;
   private isPaused: boolean = false;
-  private voiceQueue: SpeechSynthesisUtterance[] = [];
   private settings: SpeechSynthesisSettings = {
     autoSpeak: false,
     rate: 1.0,
@@ -159,14 +157,12 @@ export class SpeechSynthesisService {
       utterance.onstart = () => {
         this.isSpeaking = true;
         this.isPaused = false;
-        this.currentUtterance = utterance;
         this.onStart();
       };
 
       utterance.onend = () => {
         this.isSpeaking = false;
         this.isPaused = false;
-        this.currentUtterance = null;
         this.onEnd();
         resolve();
       };
@@ -174,7 +170,6 @@ export class SpeechSynthesisService {
       utterance.onerror = (event) => {
         this.isSpeaking = false;
         this.isPaused = false;
-        this.currentUtterance = null;
         const errorMessage = `Lỗi text-to-speech: ${event.error}`;
         this.onError(errorMessage);
         reject(new Error(errorMessage));
@@ -203,8 +198,6 @@ export class SpeechSynthesisService {
       this.synth.cancel();
       this.isSpeaking = false;
       this.isPaused = false;
-      this.currentUtterance = null;
-      this.voiceQueue = [];
     }
   }
 

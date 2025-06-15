@@ -23,12 +23,10 @@ import {
   AlertTriangle, 
   CheckCircle, 
   Loader2,
-  Eye,
   Sparkles,
   Edit
 } from 'lucide-react';
 import { Location, ReportType, ReportFormData } from '../types';
-import { useTrafficAgent } from '../hooks/useTrafficAgent';
 import { useGeolocation } from '@/features/traffic-explainer/hooks/useGeolocation';
 import { 
   analyzeTrafficImage, 
@@ -87,7 +85,6 @@ export const ReportForm = ({
   const [geocodedLocation, setGeocodedLocation] = useState<Location | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { submitReport } = useTrafficAgent();
   const geolocation = useGeolocation();
 
   // Sử dụng location từ props hoặc từ geolocation (không auto-use manual address)
@@ -656,4 +653,4 @@ export const ReportForm = ({
       </CardContent>
     </Card>
   );
-}; 
+};

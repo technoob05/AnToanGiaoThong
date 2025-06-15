@@ -1,6 +1,5 @@
 import { Moon, Sun } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/components/providers/theme-provider";
 
@@ -25,4 +24,4 @@ export function ModeToggle() {
 			<Moon className="size-5 text-muted-foreground" />
 		</div>
 	);
-} 
+}

@@ -11,22 +11,18 @@ import {
   Map, 
   Plus, 
   Trophy, 
-  User, 
   Target, 
   MapPin,
   Award,
   TrendingUp,
-  Clock,
-  CheckCircle,
   Star,
-  Medal,
-  Settings
+  Medal
 } from 'lucide-react';
 import { TrafficMap } from './TrafficMap';
 import { ReportForm } from './ReportForm';
 import { useTrafficAgent } from '../hooks/useTrafficAgent';
 import { useGeolocation } from '@/features/traffic-explainer/hooks/useGeolocation';
-import { Location, TrafficReport, ReportFormData, BadgeRarity } from '../types';
+import { Location, ReportFormData, BadgeRarity } from '../types';
 
 interface TrafficAgentInterfaceProps {
   className?: string;
@@ -375,7 +371,7 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
             <TabsContent value="report" className="p-4">
               {showReportForm ? (
                 <ReportForm
-                  location={selectedLocation}
+                  location={selectedLocation || undefined}
                   onSubmit={handleReportSubmit}
                   onCancel={handleReportCancel}
                   loading={loading}
@@ -466,4 +462,4 @@ export const TrafficAgentInterface = ({ className = '' }: TrafficAgentInterfaceP
       </div>
     </div>
   );
-}; 
+};

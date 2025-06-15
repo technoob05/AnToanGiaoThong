@@ -313,11 +313,10 @@ export const ACHIEVEMENTS: Achievement[] = [
 export const generateAdaptiveFeedback = (
   correctAnswers: number,
   totalQuestions: number,
-  timeSpent: number,
+  _timeSpent: number,
   categories: { [key: string]: number }
 ): { feedback: string; nextLevel: boolean; recommendations: string[] } => {
   const accuracy = (correctAnswers / totalQuestions) * 100;
-  const avgTimePerQuestion = timeSpent / totalQuestions;
 
   let feedback = '';
   let nextLevel = false;

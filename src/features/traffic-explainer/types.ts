@@ -42,3 +42,26 @@ export interface LocationData {
   address?: string;
   timestamp: number;
 }
+
+export interface Theme {
+  id: string;
+  name: string;
+  description: string;
+  preview: string;
+  background: string;
+  cardBackground: string;
+  headerBackground: string;
+  primaryGradient: string;
+  secondaryGradient: string;
+  accentColor: string;
+  textColor: string;
+  mutedColor: string;
+  borderColor: string;
+  shadowColor: string;
+  categories: {
+    safety: string;
+    rules: string;
+    signs: string;
+    tips: string;
+  };
+}

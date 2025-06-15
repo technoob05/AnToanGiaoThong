@@ -133,9 +133,10 @@ export const useTrafficExplainer = () => {
     startTimeRef.current = Date.now();
 
     // Lấy vị trí hiện tại (không bắt buộc)
-    let currentLocation: LocationData | null = null;
+    let currentLocation: LocationData | undefined = undefined;
     try {
-      currentLocation = await geolocation.getCurrentLocation();
+      const locationResult = await geolocation.getCurrentLocation();
+      currentLocation = locationResult || undefined;
       if (currentLocation) {
         setProgress(prev => ({ ...prev, hasLocationPermission: true }));
       }

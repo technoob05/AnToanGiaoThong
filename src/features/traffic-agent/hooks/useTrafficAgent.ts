@@ -12,7 +12,6 @@ import {
   LeaderboardEntry, 
   GameStats, 
   ReportFormData,
-  ReportType,
   ReportStatus,
   VoteType,
   BadgeRarity
@@ -37,7 +36,7 @@ interface TrafficAgentStore {
 
 const useTrafficAgentStore = create<TrafficAgentStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       currentUser: null,
       reports: [],
       userStats: null,
@@ -371,4 +370,4 @@ export const useTrafficAgent = () => {
     // Utils
     clearAllData: store.clearData
   };
-}; 
+};
