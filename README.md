@@ -1,8 +1,6 @@
 # 🚦 G-Traffic Heroes
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/685cf435-d576-4c65-9fd0-8d1d935e8f2d" alt="G-Traffic Heroes" width="600" />
-</p>
+![image](https://github.com/user-attachments/assets/1dee0833-70f5-40af-bd1f-b6b63403d279)
 
 <p align="center">
   <strong>🇻🇳 Ứng dụng AI thông minh cho giáo dục An toàn Giao thông Việt Nam</strong>
