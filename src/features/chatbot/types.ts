@@ -8,6 +8,8 @@ export interface ChatMessage {
   isLoading?: boolean;
   sources?: DocumentChunk[];
   confidence?: 'high' | 'medium' | 'low';
+  isVoiceInput?: boolean;
+  hasBeenSpoken?: boolean;
 }
 
 export interface QuickReply {
@@ -16,11 +18,32 @@ export interface QuickReply {
   category: 'violation' | 'law' | 'safety' | 'general';
 }
 
+export interface VoiceState {
+  isRecording: boolean;
+  isSpeaking: boolean;
+  isListening: boolean;
+  error: string | null;
+  transcript: string;
+  isTranscriptFinal: boolean;
+}
+
+export interface VoiceSettings {
+  autoSpeak: boolean;
+  speechRate: number;
+  speechPitch: number;
+  speechVolume: number;
+  selectedVoiceURI: string | null;
+  language: string;
+  continuousListening: boolean;
+}
+
 export interface ChatState {
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
   quickReplies: QuickReply[];
+  voiceState: VoiceState;
+  voiceSettings: VoiceSettings;
 }
 
 export const DEFAULT_QUICK_REPLIES: QuickReply[] = [

@@ -10,12 +10,14 @@ import { useChat } from '../hooks/useChat';
 import { ChatMessage } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { SourceCard } from './SourceCard';
+import { VoiceControls } from './VoiceControls';
 
 interface ChatMessageProps {
   message: ChatMessage;
+  onSpeakMessage?: (messageId: string) => void;
 }
 
-function ChatMessageComponent({ message }: ChatMessageProps) {
+function ChatMessageComponent({ message, onSpeakMessage }: ChatMessageProps) {
   const isUser = message.role === 'user';
   
   return (
@@ -47,9 +49,37 @@ function ChatMessageComponent({ message }: ChatMessageProps) {
             <span className="text-sm text-gray-500">G-LawBot đang suy nghĩ...</span>
           </div>
         ) : (
-          <div className="whitespace-pre-wrap text-sm leading-relaxed break-words">
-            {message.content}
-          </div>
+          <>
+            <div className="whitespace-pre-wrap text-sm leading-relaxed break-words">
+              {message.content}
+            </div>
+            
+            {/* Voice input indicator */}
+            {message.isVoiceInput && (
+              <div className="flex items-center gap-1 mt-2">
+                <span className="text-xs text-blue-600 dark:text-blue-400">🎤 Tin nhắn giọng nói</span>
+              </div>
+            )}
+            
+            {/* Speak button for assistant messages */}
+            {!isUser && !message.isLoading && onSpeakMessage && (
+              <div className="flex items-center gap-2 mt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSpeakMessage(message.id)}
+                  className="text-xs h-6 px-2 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  title="Đọc tin nhắn này"
+                >
+                  <span className="mr-1">🔊</span>
+                  Đọc
+                </Button>
+                {message.hasBeenSpoken && (
+                  <span className="text-xs text-green-600 dark:text-green-400">✓ Đã đọc</span>
+                )}
+              </div>
+            )}
+          </>
         )}
         
         <div className={cn(
@@ -115,9 +145,15 @@ export function ChatInterface() {
     isLoading,
     error,
     quickReplies,
+    voiceState,
+    voiceSettings,
     sendMessage,
     clearChat,
-    retryLastMessage
+    retryLastMessage,
+    updateVoiceState,
+    updateVoiceSettings,
+    handleVoiceInput,
+    speakMessage
   } = useChat();
 
   const scrollToBottom = () => {
@@ -233,7 +269,10 @@ export function ChatInterface() {
                 <div className="space-y-4 min-w-0">
                   {messages.map((message) => (
                     <div key={message.id} className="space-y-3 min-w-0">
-                      <ChatMessageComponent message={message} />
+                      <ChatMessageComponent 
+                        message={message} 
+                        onSpeakMessage={speakMessage}
+                      />
                       {/* Show sources for assistant messages that have them */}
                       {message.role === 'assistant' && 
                        message.sources && 
@@ -324,9 +363,21 @@ export function ChatInterface() {
                   )}
                 </Button>
               </div>
+
+              {/* Voice Controls */}
+              <div className="mt-3 relative">
+                <VoiceControls
+                  voiceState={voiceState}
+                  voiceSettings={voiceSettings}
+                  onVoiceStateChange={updateVoiceState}
+                  onVoiceSettingsChange={updateVoiceSettings}
+                  onTranscriptComplete={handleVoiceInput}
+                  disabled={isLoading}
+                />
+              </div>
               
               <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
-                <span>💡 Nhấn Enter để gửi tin nhắn</span>
+                <span>💡 Nhấn Enter để gửi tin nhắn hoặc dùng nút 🎤 để nói</span>
                 <span>🤖 Được hỗ trợ bởi Gemini AI</span>
               </div>
             </CardContent>
